@@ -34,11 +34,12 @@ exports.index = function (req, res) {
   );
 };
 
-exports.book_list = function (req, res) {
+exports.book_list = function (req, res, next) {
   Book.find({}, 'title')
     .populate('author')
     .exec((err, bookListResult) => {
       if (err) {
+        return next(err);
       } else {
         res.render('book_list', {
           title: 'Book List',
