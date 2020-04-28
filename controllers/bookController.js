@@ -35,7 +35,18 @@ exports.index = function (req, res) {
 };
 
 exports.book_list = function (req, res) {
-  res.send('NOT IMPLEMENTED: all books');
+  Book.find({}, 'title')
+    .populate('author')
+    .exec((err, bookListResult) => {
+      if (err) {
+      } else {
+        res.render('book_list', {
+          title: 'Book List',
+          bookListData: bookListResult,
+        });
+        console.log(bookListResult);
+      }
+    });
 };
 
 exports.book_detail = function (req, res) {
