@@ -1,19 +1,41 @@
-let BookInstance = require('../models/bookinstance');
+const BookInstance = require('../models/bookinstance');
+const Book = require('../models/book');
+
+const async = require('async');
 
 exports.bookinstance_list = function (req, res, next) {
   BookInstance.find()
     .populate('book')
     .exec((err, bookInstancesResult) => {
-      if (err){
-        return next(err)
+      if (err) {
+        return next(err);
       } else {
-        res.render('bookinstance_list' , {title: 'book instance list', bookInstanceListData: bookInstancesResult})
+        res.render('bookinstance_list', {
+          title: 'book instance list',
+          bookInstanceListData: bookInstancesResult,
+        });
       }
-    })
+    });
 };
 
-exports.bookinstance_detail = function (req, res) {
-  res.send('not implemented bookinstance detail');
+exports.bookinstance_detail = function (req, res, next) {
+  BookInstance.findById(req.params.id)
+    .populate('book')
+    .exec((err, bookinstance) => {
+      if (err) {
+        return next(err);
+      }
+      if (bookinstance === null) {
+        let err = new Error('this book has no instances');
+        err.status = 404;
+        return next(err);
+      } else {
+        res.render('bookinstance_detail', {
+          title: 'Book Instance Detail',
+          bookinstance: bookinstance,
+        });
+      }
+    });
 };
 
 exports.bookinstance_create_get = function (req, res) {
