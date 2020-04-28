@@ -49,8 +49,36 @@ exports.book_list = function (req, res, next) {
     });
 };
 
-exports.book_detail = function (req, res) {
-  res.send('NOT IMPLEMENTED: detail: ' + req.params.id);
+exports.book_detail = function (req, res, next) {
+  async.parallel(
+    {
+      book: (callback) => {
+        Book.findById(req.params.id)
+          .populate('author')
+          .populate('genre')
+          .exec(callback);
+      },
+      book_instance: (callback) => {
+        BookInstance.find({ book: req.params.id }).exec(callback);
+      },
+    },
+    (err, results) => {
+      if (err) {
+        return next(err);
+      }
+      if (results.book === null) {
+        let err = new Error('Book not found');
+        err.status = 404;
+        return next(err);
+      } else {
+        res.render('book_detail', {
+          title: 'Book Details',
+          book: results.book,
+          book_instance: results.book_instance,
+        });
+      }
+    }
+  );
 };
 
 exports.book_create_get = function (req, res) {
