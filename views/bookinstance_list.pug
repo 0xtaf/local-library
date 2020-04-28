@@ -15,6 +15,6 @@ block content
         else
           p.text-warning #{val.status}
         if val.status!='Available'
-          p (Due: #{val.due_back})
+          p (Due: #{val.due_back_formatted})
     else
       li no book copies in the library
