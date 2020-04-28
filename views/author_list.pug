@@ -1,0 +1,14 @@
+extends layout
+
+block content
+
+  h1= title
+
+  
+  ul 
+    each val in authorData
+      li
+        a(href=val.url) #{val.name}
+        p #{val.date_of_birth_formatted} - #{val.date_of_death_formatted}
+    else
+      li no author

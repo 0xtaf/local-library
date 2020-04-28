@@ -45,7 +45,6 @@ exports.book_list = function (req, res, next) {
           title: 'Book List',
           bookListData: bookListResult,
         });
-        console.log(bookListResult);
       }
     });
 };
