@@ -1,35 +1,65 @@
-let Book = require('../models/book');
+const Book = require('../models/book');
+const Author = require('../models/author');
+const Genre = require('../models/genre');
+const BookInstance = require('../models/bookinstance');
 
-exports.index = function(req,res){
-  res.send('NOT IMPLEMENTED: site home page')
-}
+const async = require('async');
 
-exports.book_list = function(req,res){
-  res.send('NOT IMPLEMENTED: all books')
-}
+exports.index = function (req, res) {
+  async.parallel(
+    {
+      book_count: function (callback) {
+        Book.countDocuments({}, callback);
+      },
+      book_instance_count: function (callback) {
+        BookInstance.countDocuments({}, callback);
+      },
+      book_instance_available_count: function (callback) {
+        BookInstance.countDocuments({ status: 'Available' }, callback);
+      },
+      author_count: function (callback) {
+        Author.countDocuments({}, callback);
+      },
+      genre_count: function (callback) {
+        Genre.countDocuments({}, callback);
+      },
+    },
+    function (err, results) {
+      res.render('index', {
+        title: 'Local Library Home',
+        error: err,
+        data: results,
+      });
+    }
+  );
+};
 
-exports.book_detail =function(req,res){
-  res.send('NOT IMPLEMENTED: detail: '+req.params.id)
-}
+exports.book_list = function (req, res) {
+  res.send('NOT IMPLEMENTED: all books');
+};
 
-exports.book_create_get = function(req,res){
-  res.send('NOT IMPLEMENTED: book create get')
-}
+exports.book_detail = function (req, res) {
+  res.send('NOT IMPLEMENTED: detail: ' + req.params.id);
+};
 
-exports.book_create_post = function(req,res){
-  res.send('NOT IMPLEMENTED: book create post')
-}
-exports.book_delete_get = function(req,res){
-  res.send('NOT IMPLEMENTED: book delete get')
-}
+exports.book_create_get = function (req, res) {
+  res.send('NOT IMPLEMENTED: book create get');
+};
 
-exports.book_delete_post = function(req,res){
-  res.send('NOT IMPLEMENTED: book delete post')
-}
-exports.book_update_get = function(req,res){
-  res.send('NOT IMPLEMENTED: book update get')
-}
+exports.book_create_post = function (req, res) {
+  res.send('NOT IMPLEMENTED: book create post');
+};
+exports.book_delete_get = function (req, res) {
+  res.send('NOT IMPLEMENTED: book delete get');
+};
 
-exports.book_update_post = function(req,res){
-  res.send('NOT IMPLEMENTED: book update post')
-}
+exports.book_delete_post = function (req, res) {
+  res.send('NOT IMPLEMENTED: book delete post');
+};
+exports.book_update_get = function (req, res) {
+  res.send('NOT IMPLEMENTED: book update get');
+};
+
+exports.book_update_post = function (req, res) {
+  res.send('NOT IMPLEMENTED: book update post');
+};
