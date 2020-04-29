@@ -1,6 +1,8 @@
 const Genre = require('../models/genre');
 const Book = require('../models/book');
 
+const validator = require('express-validator');
+
 const async = require('async');
 
 exports.genre_list = function (req, res, next) {
@@ -51,13 +53,56 @@ exports.genre_detail = function (req, res, next) {
 
 // Display Genre create form on GET.
 exports.genre_create_get = function (req, res) {
-  res.send('NOT IMPLEMENTED: Genre create GET');
+  res.render('genre_form', { title: 'Create Genre' });
 };
 
 // Handle Genre create on POST.
-exports.genre_create_post = function (req, res) {
-  res.send('NOT IMPLEMENTED: Genre create POST');
-};
+// I won't make different middewares and instead use and array in which they get triggered in order.
+exports.genre_create_post = [
+  //trim first and then check if the field has a letter at least
+  validator.body('name', 'genre name required').trim().isLength({ min: 1 }),
+  //if it does, sanitize
+  validator.sanitizeBody('name').escape(),
+  //process the request
+  (req, res, next) => {
+    //extract the validation errors from the req
+    const errors = validator.validationResult(req);
+    //create a sanitized and validated object
+    let genre = new Genre({
+      name: req.body.name,
+    });
+
+    //check if any errors occured
+    if (!errors.isEmpty()) {
+      res.render('genre_form', {
+        title: 'create genre (again)',
+        genre: genre,
+        errors: errors.array(),
+      });
+      return;
+    } else {
+      //which means the form is valid now
+      //check if genre with the same name exists already
+      Genre.findOne({ name: req.body.name }).exec((err, found_genre) => {
+        if (err) {
+          return next(err);
+        }
+        if (found_genre) {
+          //genre exists, redirect to its detail page
+          res.redirect(found_genre.url);
+        } else {
+          genre.save(function (err) {
+            if (err) {
+              return next(err);
+            }
+            //now genre saved
+            res.redirect(genre.url);
+          });
+        }
+      });
+    }
+  },
+];
 
 // Display Genre delete form on GET.
 exports.genre_delete_get = function (req, res) {
