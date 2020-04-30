@@ -162,19 +162,92 @@ exports.author_delete_post = function (req, res, next) {
         });
       } else {
         //author has no books. delete and redirect to liist of authors
-        Author.findByIdAndRemove(req.body.authorid, function deleteAuthor(err){
-          if (err) {return next(err)}
-          res.redirect('/catalog/authors')
-        })
+        Author.findByIdAndRemove(req.body.authorid, function deleteAuthor(err) {
+          if (err) {
+            return next(err);
+          }
+          res.redirect('/catalog/authors');
+        });
       }
     }
   );
 };
 
-exports.author_update_get = function (req, res) {
-  res.send('NOT IMPLEMENTED: author update get');
+exports.author_update_get = function (req, res, next) {
+  Author.findById(req.params.id).exec((err, foundAuthors) => {
+    if (err) {
+      return next(err);
+    }
+    if (foundAuthors === null) {
+      let err = new Error('no author found');
+      err.status = 404;
+      return next(err);
+    } else {
+      res.render('author_form', {
+        title: 'update author',
+        author: foundAuthors,
+      });
+    }
+  });
 };
 
-exports.author_update_post = function (req, res) {
-  res.send('NOT IMPLEMENTED: author update post');
-};
+exports.author_update_post = [
+  //validate fields
+  body('first_name')
+    .trim()
+    .isLength({ min: 2 })
+    .withMessage('first name must be specified')
+    .isAlphanumeric()
+    .withMessage('first name has non alphanumerical chars'),
+  body('family_name')
+    .trim()
+    .isLength({ min: 2 })
+    .withMessage('family name must be specified')
+    .isAlphanumeric()
+    .withMessage('family name has non alphanumerical chars'),
+  body('date_of_birth', 'invalid date of birth')
+    .optional({ checkFalsy: true })
+    .isISO8601(),
+  body('date_of_death', 'invalid date of death')
+    .optional({ checkFalsy: true })
+    .isISO8601(),
+
+  //sanitize
+  sanitizeBody('first_name').escape(),
+  sanitizeBody('family_name').escape(),
+  sanitizeBody('date_of_birth').toDate(),
+  sanitizeBody('date_of_death').toDate(),
+
+  //process the req
+  (req, res, next) => {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      res.render('author_form', {
+        title: 'crete author (again)',
+        errors: errors.array(),
+        author: req.body,
+      });
+      return;
+    } else {
+      let author = new Author({
+        first_name: req.body.first_name,
+        family_name: req.body.family_name,
+        date_of_birth: req.body.date_of_birth,
+        date_of_death: req.body.date_of_death,
+        _id: req.params.id,
+      });
+      // form is valid. Update author.
+      Author.findByIdAndUpdate(req.params.id, author, {}, function (
+        err,
+        theauthor
+      ) {
+        if (err) {
+          return next(err);
+        }
+        // Successful - redirect to genre detail page.
+        res.redirect(theauthor.url);
+      });
+    }
+  },
+];
