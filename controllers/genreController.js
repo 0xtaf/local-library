@@ -168,11 +168,51 @@ exports.genre_delete_post = function (req, res, next) {
 };
 
 // Display Genre update form on GET.
-exports.genre_update_get = function (req, res) {
-  res.send('NOT IMPLEMENTED: Genre update GET');
+exports.genre_update_get = function (req, res, next) {
+  Genre.findById(req.params.id).exec((err, genreResults) => {
+    if (err) {return next(err)}
+    if (genreResults===null){
+      let err = new Error('No genre found')
+      err.status = 404;
+      return next(err) 
+    } else {
+      res.render('genre_form', {title: 'update genre', genre:genreResults})
+    }
+  })
 };
 
 // Handle Genre update on POST.
-exports.genre_update_post = function (req, res) {
-  res.send('NOT IMPLEMENTED: Genre update POST');
-};
+exports.genre_update_post = [
+  //trim first and then check if the field has a letter at least
+  validator.body('name', 'genre name required').trim().isLength({ min: 1 }),
+  //if it does, sanitize
+  validator.sanitizeBody('name').escape(),
+  //process the request
+  (req, res, next) => {
+    //extract the validation errors from the req
+    const errors = validator.validationResult(req);
+    //create a sanitized and validated object
+    let genre = new Genre({
+      name: req.body.name,
+      _id: req.params.id
+    });
+
+    //check if any errors occured
+    if (!errors.isEmpty()) {
+      res.render('genre_form', {
+        title: 'update genre',
+        genre: genre,
+        errors: errors.array(),
+      });
+      return;
+    } else {
+      //which means the form is valid now
+      //check if genre with the same name exists already
+      Genre.findByIdAndUpdate(req.params.id, genre, {}, function (err,thegenre) {
+        if (err) { return next(err); }
+           // Successful - redirect to genre detail page.
+           res.redirect(thegenre.url);
+        });
+    }
+  },
+]
